@@ -1,0 +1,70 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 2. Паттерн «Прототип»: шаблоны поездок и сравнение транспорта
+
+class TripCalculatorViewModel <<Client>> {
+  - templates: TripTemplateRegistry
+  - comparison: TransportComparison
+  --
+  + applyTemplate(): void
+  + saveTemplate(): void
+  + compareTransport(): void
+}
+class TripTemplateRegistry <<PrototypeRegistry>> {
+  - prototypes: Map<String, TripBuilder>
+  --
+  {static} + withPresets(): TripTemplateRegistry
+  + register(name: String, prototype: TripBuilder): void
+  + create(name: String): TripBuilder
+  + contains(name: String): boolean
+  + names(): List<String>
+}
+class TransportComparison <<Client>> {
+  - calculator: TripCostCalculator
+  --
+  + compare(prototype: TripBuilder): List<ComparisonRow>
+}
+class ComparisonRow <<record>> {
+  + transport: TransportType
+  + cost: CostBreakdown
+  + note: String
+}
+interface Prototype<T> {
+  + copy(): T
+}
+class TripBuilder <<ConcretePrototype>> {
+  - origin: String
+  - destination: String
+  - transport: TransportType
+  - passengers: int
+  - ... (ещё 6 полей)
+  --
+  + TripBuilder()
+  - TripBuilder(source: TripBuilder)
+  + copy(): TripBuilder
+  + by(transport: TransportType): TripBuilder
+  + ... (остальные шаги строителя)
+  + build(): Trip
+}
+class TripDirector {
+  + configure(preset: TripPreset): TripBuilder
+}
+class Trip <<Product>> {
+  + getTransport(): TransportType
+  + ...
+}
+
+TripTemplateRegistry <-- TripCalculatorViewModel : templates
+TransportComparison <-- TripCalculatorViewModel : comparison
+TripTemplateRegistry o-- "*" TripBuilder : prototypes
+TripDirector <.. TripTemplateRegistry : configure()
+TripBuilder <.. TransportComparison : copy()
+ComparisonRow <.. TransportComparison : «create»
+Prototype <|.. TripBuilder : T = TripBuilder
+Trip <.. TripBuilder : «create»
+note right of Prototype
+  copy() возвращает новый строитель со всеми частями прототипа. Реестр хранит копии и выдаёт копии, поэтому изменения не портят шаблон.
+end note
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 10. Паттерн «Наблюдатель»: оповещение о смене состояния заявки
+
+class TripRequest <<Subject>> {
+  - listeners: List<RequestListener>
+  --
+  + addListener(listener: RequestListener): void
+  + removeListener(listener: RequestListener): void
+  ~ changeState(next, comment): void  {оповещает всех}
+}
+interface RequestListener <<Observer>> {
+  + onStateChanged(change: StateChange): void
+}
+class StateChange <<record>> {
+  + request: TripRequest
+  + from: RequestState
+  + to: RequestState
+  + comment: String
+  + time: LocalTime
+}
+class RequestJournal <<ConcreteObserver>> {
+  - entries: List<StateChange>
+  --
+  + onStateChanged(change): void
+  + entries(): List<StateChange>
+  + of(request): List<StateChange>
+}
+class NotificationCenter <<ConcreteObserver>> {
+  - messages: List<String>
+  --
+  + onStateChanged(change): void
+  + messages(): List<String>
+}
+class RequestsViewModel <<ConcreteObserver>> {
+  - rows: ObservableList<RequestRow>
+  --
+  + onStateChanged(change): void
+  + perform(action): void
+  + createRequest(trip, cost): TripRequest
+}
+class TripPlanningFacade {
+  + createRequest(trip, cost): TripRequest
+}
+
+TripRequest o-- "*" RequestListener : listeners
+RequestListener <|.. RequestJournal
+RequestListener <|.. NotificationCenter
+RequestListener <|.. RequestsViewModel
+StateChange <.. RequestListener : «use»
+TripRequest <.. TripPlanningFacade : «create», подписывает журнал и уведомления
+note right of NotificationCenter
+  Заявка не знает, кто на неё подписан: журнал записывает переход, центр уведомлений сообщает сотруднику, согласующему или бухгалтерии, модель представления обновляет таблицу и кнопки. Новый подписчик добавляется без изменения заявки.
+end note
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 11. Паттерн «Стратегия»: критерий выбора транспорта
+
+class TransportComparison <<Context>> {
+  - calculator: TripCostCalculator
+  - strategy: TransportChoiceStrategy
+  --
+  + setStrategy(strategy: TransportChoiceStrategy): void
+  + compare(prototype: TripBuilder): List<ComparisonRow>
+  + best(rows: List<ComparisonRow>): Optional<ComparisonRow>
+  {static} + strategies(): List<TransportChoiceStrategy>
+}
+interface TransportChoiceStrategy <<Strategy>> {
+  + name(): String
+  + score(row: ComparisonRow): double
+  + explain(row: ComparisonRow): String
+}
+class CheapestChoice <<ConcreteStrategy>> {
+  + score(row) = стоимость
+}
+class FastestChoice <<ConcreteStrategy>> {
+  + score(row) = часы в пути
+}
+class TimeValueChoice <<ConcreteStrategy>> {
+  - hourValue: BigDecimal
+  --
+  + score(row) = стоимость + часы × цена часа × пассажиры
+}
+class ComparisonRow <<record>> {
+  + transport: TransportType
+  + cost: CostBreakdown
+  + travelTime: TravelTime
+  + legs: int
+  + passengers: int
+  --
+  + totalHours(): double
+}
+class TripCalculatorViewModel <<Client>> {
+  - choiceStrategy: ObjectProperty<TransportChoiceStrategy>
+  --
+  + compareTransport(): void
+}
+class TripPlanningFacade {
+  + compare(prototype, strategy): List<ComparisonRow>
+  + choiceStrategies(): List<TransportChoiceStrategy>
+}
+
+TransportChoiceStrategy <-- TransportComparison : strategy
+TransportChoiceStrategy <|.. CheapestChoice
+TransportChoiceStrategy <|.. FastestChoice
+TransportChoiceStrategy <|.. TimeValueChoice
+ComparisonRow <.. TransportComparison : «create»
+TripPlanningFacade <-- TripCalculatorViewModel : facade
+TransportComparison <-- TripPlanningFacade : comparison
+note right of TimeValueChoice
+  Пользователь выбирает критерий в списке «Критерий». Сравнение считает все варианты одинаково, а порядок строк и отметку «лучший» определяет стратегия: вариант с наименьшей оценкой score().
+end note
+@enduml

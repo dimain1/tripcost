@@ -1,0 +1,75 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 9. Паттерн «Посредник»: связь вкладок приложения
+
+interface PlannerMediator <<Mediator>> {
+  + notify(sender: PlannerColleague, event: PlannerEvent): void
+}
+interface PlannerColleague <<Colleague>> {
+  + setMediator(mediator: PlannerMediator): void
+}
+class TripPlannerMediator <<ConcreteMediator>> {
+  - main: MainViewModel
+  - calculator: TripCalculatorViewModel
+  - journey: JourneyViewModel
+  - directions: DirectionsViewModel
+  --
+  + notify(sender, event): void
+}
+interface PlannerEvent <<sealed>> {
+}
+class AddLegRequested <<record>> {
+  + from, to: String
+  + transport: TransportType
+  + source: String
+}
+class OpenInCalculatorRequested <<record>> {
+  + from, to: String
+  + transport: TransportType
+  + passengers: int
+}
+class JourneyChanged <<record>> {
+  + legs: int
+  + total: String
+}
+class TripCalculatorViewModel <<ConcreteColleague>> {
+  + addToJourney(): void
+  + openTrip(from, to, transport, passengers): void
+}
+class JourneyViewModel <<ConcreteColleague>> {
+  + addLegFrom(from, to, transport): boolean
+  + openSelectedInCalculator(): void
+}
+class DirectionsViewModel <<ConcreteColleague>> {
+  + addSelectedToJourney(): void
+}
+class MainViewModel {
+  - status: String
+  - selectedTab: AppTab
+  --
+  + connect(calculator, journey, directions): void
+  ~ showStatus(message: String): void
+  ~ selectTab(tab: AppTab): void
+}
+
+PlannerMediator <|.. TripPlannerMediator
+PlannerColleague <|.. TripCalculatorViewModel
+PlannerColleague <|.. JourneyViewModel
+PlannerColleague <|.. DirectionsViewModel
+PlannerMediator <-- PlannerColleague : mediator
+TripCalculatorViewModel <-- TripPlannerMediator
+JourneyViewModel <-- TripPlannerMediator
+DirectionsViewModel <-- TripPlannerMediator
+MainViewModel <-- TripPlannerMediator : main
+TripPlannerMediator <.. MainViewModel : «create»
+PlannerEvent <|.. AddLegRequested
+PlannerEvent <|.. OpenInCalculatorRequested
+PlannerEvent <|.. JourneyChanged
+PlannerEvent <.. PlannerMediator : «use»
+note right of JourneyViewModel
+  Вкладки не ссылаются друг на друга. «В маршрут» на вкладке «Расчёт» или «Направления» - событие AddLegRequested: посредник добавляет участок в маршрут, открывает вкладку «Маршрут» и пишет в строку состояния. «Открыть в расчёте» - OpenInCalculatorRequested.
+end note
+@enduml

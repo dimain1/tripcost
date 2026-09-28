@@ -1,0 +1,94 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 10. Паттерн «Состояние»: жизненный цикл заявки на командировку
+
+class TripRequest <<Context>> {
+  - id: int
+  - trip: Trip
+  - cost: CostBreakdown
+  - state: RequestState
+  - decision: ApprovalDecision
+  --
+  + submit() / approve() / reject(reason)
+  + pay() / complete() / cancel() / revise()
+  + perform(action, comment): void
+  + can(action: RequestAction): boolean
+  ~ changeState(next: RequestState, comment): void
+  ~ runApproval(): ApprovalDecision
+}
+interface RequestState <<State>> {
+  + name(): String
+  + allowedActions(): Set<RequestAction>
+  + submit(request) / approve(request)
+  + reject(request, reason)
+  + pay(request) / complete(request)
+  + cancel(request) / revise(request)
+}
+abstract class AbstractRequestState {
+  + submit(request): void  {отказ}
+  + ... остальные действия: отказ
+  - deny(action): void
+}
+enum RequestAction {
+  SUBMIT
+  APPROVE
+  REJECT
+  PAY
+  COMPLETE
+  CANCEL
+  REVISE
+}
+class RequestStates.Draft <<ConcreteState>> {
+  «Черновик»
+  --
+  разрешено: submit, cancel
+}
+class RequestStates.Pending <<ConcreteState>> {
+  «На согласовании»
+  --
+  разрешено: approve, reject, cancel
+}
+class RequestStates.Approved <<ConcreteState>> {
+  «Согласована»
+  --
+  разрешено: pay, cancel
+}
+class RequestStates.Rejected <<ConcreteState>> {
+  «Отклонена»
+  --
+  разрешено: revise
+}
+class RequestStates.Paid <<ConcreteState>> {
+  «Оплачена»
+  --
+  разрешено: complete
+}
+class RequestStates.Completed <<ConcreteState>> {
+  «Завершена»
+  --
+  разрешено: -
+}
+class RequestStates.Cancelled <<ConcreteState>> {
+  «Отменена»
+  --
+  разрешено: -
+}
+
+RequestState <-- TripRequest : state
+RequestState <|.. AbstractRequestState
+RequestAction <.. RequestState : «use»
+TripRequest <.. RequestState : changeState()
+AbstractRequestState <|-- RequestStates.Draft
+AbstractRequestState <|-- RequestStates.Pending
+AbstractRequestState <|-- RequestStates.Approved
+AbstractRequestState <|-- RequestStates.Rejected
+AbstractRequestState <|-- RequestStates.Paid
+AbstractRequestState <|-- RequestStates.Completed
+AbstractRequestState <|-- RequestStates.Cancelled
+note right of RequestStates.Cancelled
+  Заявка передаёт каждое действие текущему состоянию. Состояние выполняет его и переводит заявку в следующее (changeState) или отказывает: базовый класс по умолчанию запрещает все действия. Черновик при отправке прогоняет заявку по цепочке согласования: автосогласование - сразу «Согласована», нарушение политики - «Отклонена», в остальных случаях «На согласовании».
+end note
+@enduml

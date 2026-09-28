@@ -1,0 +1,82 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 4. Паттерн «Декоратор»: дополнительные услуги к проезду
+
+abstract class TransportFactory <<Client>> {
+  + createTransport(): Transport {abstract}
+  + createFor(trip: Trip): Transport
+}
+class TransportDecorators {
+  {static} + decorate(t: Transport, options: Set<TripOption>): Transport
+}
+enum TripOption {
+  PEAK_SEASON
+  DISCOUNT
+  BAGGAGE
+  INSURANCE
+  --
+  + appliesTo(type: TransportType): boolean
+}
+interface Transport <<Component>> {
+  + getType(): TransportType
+  + cost(trip: Trip): BigDecimal
+  + breakdown(trip: Trip): CostGroup
+  + costLabel(): String
+  + describeBaseFee(): String
+  + describePerKm(): String
+}
+class PrivateCar <<ConcreteComponent>> {
+  + cost(trip: Trip): BigDecimal
+}
+class Taxi <<ConcreteComponent>> {
+  + cost(trip: Trip): BigDecimal
+}
+abstract class TicketTransport <<ConcreteComponent>> {
+  + cost(trip: Trip): BigDecimal
+  (Bus, Train, Plane)
+}
+abstract class TransportDecorator <<Decorator>> {
+  # inner: Transport
+  --
+  + cost(trip: Trip): BigDecimal
+  + breakdown(trip: Trip): CostGroup
+  + getType(): TransportType
+  # extra(trip: Trip, innerCost: BigDecimal): BigDecimal {abstract}
+  # label(): String {abstract}
+}
+class PeakSeasonDecorator <<ConcreteDecorator>> {
+  # extra(trip, innerCost): BigDecimal
+  # label(): String
+}
+class DiscountDecorator <<ConcreteDecorator>> {
+  # extra(trip, innerCost): BigDecimal
+  # label(): String
+}
+class BaggageDecorator <<ConcreteDecorator>> {
+  # extra(trip, innerCost): BigDecimal
+  # label(): String
+}
+class InsuranceDecorator <<ConcreteDecorator>> {
+  # extra(trip, innerCost): BigDecimal
+  # label(): String
+}
+
+TransportDecorators <.. TransportFactory : decorate()
+TripOption <.. TransportDecorators : «use»
+Transport <.. TransportFactory : «create»
+TransportDecorator <.. TransportDecorators : «create»
+Transport <|.. PrivateCar
+Transport <|.. Taxi
+Transport <|.. TicketTransport
+Transport <|.. TransportDecorator
+TransportDecorator o-- "1" Transport : inner
+TransportDecorator <|-- PeakSeasonDecorator
+TransportDecorator <|-- DiscountDecorator
+TransportDecorator <|-- BaggageDecorator
+TransportDecorator <|-- InsuranceDecorator
+note right of TransportDecorator
+  Декоратор реализует тот же интерфейс Transport и хранит ссылку inner. cost() = стоимость inner + своя надбавка. Пример: new InsuranceDecorator(new BaggageDecorator(new Plane())).
+end note
+@enduml

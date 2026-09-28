@@ -1,0 +1,65 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 12. MVVM на примере вкладки «Маршрут»
+
+class JourneyViewFxml <<View: journey-view.fxml>> {
+  TableView fx:id=table
+  Button fx:id=undoButton
+  ComboBox fx:id=fromBox
+  ...
+}
+class JourneyView <<View (code-behind)>> {
+  - viewModel: JourneyViewModel
+  @FXML - table, undoButton, fromBox, ...
+  --
+  - initialize(): void  {только привязки}
+  + getViewModel(): JourneyViewModel
+}
+class CommandBinder <<View>> {
+  {static} + bind(button: ButtonBase, command: ViewModelCommand)
+}
+class JourneyViewModel <<ViewModel>> {
+  - from, to: StringProperty
+  - transport: ObjectProperty<TransportType>
+  - rows: ObservableList<LegRow>
+  - total: ReadOnlyStringProperty
+  - canUndo, hasSelection: ReadOnlyBooleanProperty
+  - undoCommand, addLegCommand, ...: ViewModelCommand
+  --
+  + fromProperty(), getRows(), ...
+  + undoCommand(): ViewModelCommand
+  - refresh(selectAfter: int): void
+}
+class ViewModelCommand <<ViewModel>> {
+  - action: Runnable
+  - executable: ReadOnlyBooleanWrapper
+  --
+  + execute(): void
+  + executableProperty(): ReadOnlyBooleanProperty
+}
+class Journey <<Model>> {
+  + add / remove / swap / save / restore
+  + iterator(): LegIterator
+}
+class CommandHistory <<Model>> {
+  + execute(command) / undo() / redo()
+}
+class TripPlanningFacade <<Model>> {
+  + quoteJourney(journey, passengers): JourneyQuote
+}
+
+JourneyView <.. JourneyViewFxml : fx:controller
+JourneyViewModel <-- JourneyView : viewModel
+CommandBinder <.. JourneyView : «use»
+ViewModelCommand <.. CommandBinder : «use»
+JourneyViewModel *-- "*" ViewModelCommand : команды
+Journey <-- JourneyViewModel : journey
+CommandHistory <-- JourneyViewModel : history
+TripPlanningFacade <-- JourneyViewModel : facade
+note right of ViewModelCommand
+  View: fromBox.editor.text <-> fromProperty() - двусторонняя привязка; table.items = rows; CommandBinder.bind(undoButton, undoCommand()) - нажатие выполняет команду, кнопка неактивна, пока canUndo = false. ViewModel ничего не знает о кнопках и таблицах.
+end note
+@enduml

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.tripcost.view.RequestsView"
+      spacing="10">
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+    <Label text="Заявки на командировку" styleClass="section-title"/>
+    <Label text="Заявка создаётся на вкладке «Расчёт» кнопкой «Оформить заявку». Доступные действия зависят от состояния выбранной заявки."
+           styleClass="hint" wrapText="true"/>
+    <FlowPane fx:id="actionsPane" hgap="8" vgap="6"/>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Причина отказа"/>
+        <TextField fx:id="commentField" promptText="Необязательно" HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label text="Имитация сбоев сервисов:"/>
+        <CheckBox fx:id="ticketsFailBox" text="нет билетов"/>
+        <CheckBox fx:id="hotelsFailBox" text="нет мест в гостинице"/>
+        <CheckBox fx:id="insuranceFailBox" text="страховая недоступна"/>
+        <Label fx:id="budgetLabel" styleClass="hint"/>
+    </HBox>
+
+    <Label fx:id="errorLabel" styleClass="error" wrapText="true" maxWidth="Infinity"/>
+
+    <TableView fx:id="table" VBox.vgrow="ALWAYS" prefHeight="180">
+        <placeholder>
+            <Label text="Заявок пока нет" styleClass="hint"/>
+        </placeholder>
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+        </columnResizePolicy>
+        <columns>
+            <TableColumn fx:id="idColumn" text="№" prefWidth="40" sortable="false"/>
+            <TableColumn fx:id="routeColumn" text="Поездка" prefWidth="360" sortable="false"/>
+            <TableColumn fx:id="totalColumn" text="Сумма" prefWidth="120" styleClass="amount" sortable="false"/>
+            <TableColumn fx:id="approverColumn" text="Согласует" prefWidth="260" sortable="false"/>
+            <TableColumn fx:id="stateColumn" text="Состояние" prefWidth="140" sortable="false"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10" prefHeight="200">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Бронирование (сага)" styleClass="section-title"/>
+            <ListView fx:id="sagaList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Журнал переходов" styleClass="section-title"/>
+            <ListView fx:id="journalList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Уведомления" styleClass="section-title"/>
+            <ListView fx:id="notificationsList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </HBox>
+</VBox>

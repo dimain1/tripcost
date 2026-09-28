@@ -1,0 +1,66 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 11. Паттерн «Шаблонный метод»: оценка времени в пути
+
+abstract class TravelTimeEstimator <<AbstractClass>> {
+  + estimate(distanceKm: double): TravelTime  {final}
+  # speedKmh(): double  {abstract}
+  # accessHours(): double  = 0
+  # boardingHours(): double  = 0
+  # stopsHours(movingHours: double): double  = 0
+  # stopsName(): String
+  # egressHours(): double  = 0
+}
+class TravelTime <<record>> {
+  + stages: List<Stage>
+  --
+  + hours(): double
+  + details(): String
+  {static} + format(hours): String
+}
+class TravelTimeEstimators <<utility>> {
+  {static} + forType(type: TransportType): TravelTimeEstimator
+}
+class CarTime <<ConcreteClass>> {
+  # speedKmh() = 80
+  # stopsHours(): отдых
+  # stopsName()
+}
+class TaxiTime <<ConcreteClass>> {
+  # speedKmh() = 70
+  # boardingHours() = 0,25
+}
+class BusTime <<ConcreteClass>> {
+  # speedKmh() = 65
+  # accessHours() = 0,5
+  # boardingHours() = 0,25
+  # stopsHours(): стоянки
+  # egressHours() = 0,5
+}
+class TrainTime <<ConcreteClass>> {
+  # speedKmh() = 75
+  # accessHours() = 0,5
+  # boardingHours() = 0,5
+  # egressHours() = 0,5
+}
+class PlaneTime <<ConcreteClass>> {
+  # speedKmh() = 700
+  # accessHours() = 1
+  # boardingHours() = 1,5
+  # egressHours() = 0,75
+}
+
+TravelTimeEstimator <|-- CarTime
+TravelTimeEstimator <|-- TaxiTime
+TravelTimeEstimator <|-- BusTime
+TravelTimeEstimator <|-- TrainTime
+TravelTimeEstimator <|-- PlaneTime
+TravelTime <.. TravelTimeEstimator : «create»
+TravelTimeEstimator <.. TravelTimeEstimators : «create»
+note right of TravelTimeEstimator
+  estimate(): 1) дорога до места посадки accessHours(); 2) ожидание и посадка boardingHours(); 3) движение distance / speedKmh(); 4) остановки stopsHours(); 5) дорога от места прибытия egressHours(). Порядок задан в базовом классе и не меняется; нулевые этапы в результат не попадают.
+end note
+@enduml

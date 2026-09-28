@@ -1,0 +1,57 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 12. Архитектурный паттерн MVVM: слои приложения
+
+class View <<слой>> {
+  ru.tripcost.view + resources/*.fxml
+  main-view.fxml / MainView
+  trip-calculator-view.fxml / TripCalculatorView
+  journey-view.fxml / JourneyView
+  directions-view.fxml / DirectionsView
+  requests-view.fxml / RequestsView
+  tariffs-view.fxml / TariffsView
+  CommandBinder
+  --
+  разметка, привязки, диалоги - без логики
+}
+class ViewModel <<слой>> {
+  ru.tripcost.viewmodel
+  MainViewModel, TripCalculatorViewModel
+  JourneyViewModel, DirectionsViewModel
+  RequestsViewModel, TariffsViewModel
+  ViewModelCommand
+  TripPlannerMediator (посредник вкладок)
+  --
+  состояние экрана в свойствах JavaFX
+  команды, проверка ввода, форматирование
+}
+class Model <<слой>> {
+  ru.tripcost.model
+  config - настройки (Одиночка)
+  domain, journey - поездка, маршрут
+  transport, pricing - транспорт и расчёт
+  service - фасад, геосервис, заместитель
+  approval, request - согласование, заявки
+  command, report - команды, отчёты
+  --
+  предметная область, без JavaFX
+}
+class ExternalGeo <<сторонний код: external.geo>> {
+  WorldGeoApi, GeoPoint
+}
+class TripCostApp <<точка входа>> {
+  + start(stage): загружает main-view.fxml
+}
+
+ViewModel <.. View : привязка данных, команды
+View <.. ViewModel : уведомления
+Model <.. ViewModel : вызовы через фасад
+ExternalGeo <.. Model : адаптер
+View <.. TripCostApp : «create»
+note right of ViewModel
+  Зависимости направлены в одну сторону: View знает ViewModel, ViewModel знает Model. Model не знает ни о JavaFX, ни о том, как её показывают; ViewModel не знает о View и тестируется без окна. Правила проверяет MvvmArchitectureTest.
+end note
+@enduml

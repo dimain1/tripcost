@@ -1,0 +1,54 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 4. Паттерн «Компоновщик»: дерево статей расходов
+
+class TripCostCalculator <<Client>> {
+  + calculate(trip: Trip): CostBreakdown
+}
+abstract class TransportDecorator <<Client>> {
+  + breakdown(trip: Trip): CostGroup
+}
+class DetailedTripReport <<Client>> {
+  # body(): String
+}
+class TripCalculatorViewModel <<Client>> {
+  - toRow(item: CostItem, currency: String): CostRow
+}
+interface CostItem <<Component>> {
+  + name(): String
+  + amount(): BigDecimal
+  + children(): List<CostItem>
+  + isGroup(): boolean
+}
+class CostLeaf <<Leaf>> {
+  - name: String
+  - amount: BigDecimal
+  --
+  + amount(): BigDecimal
+  + children(): List<CostItem>
+}
+class CostGroup <<Composite>> {
+  - name: String
+  - items: List<CostItem>
+  --
+  {static} + of(name: String, items: CostItem...): CostGroup
+  + amount(): BigDecimal
+  + children(): List<CostItem>
+  + isGroup(): boolean
+  + with(item: CostItem): CostGroup
+  + leafCount(): int
+}
+
+CostItem <.. TripCostCalculator : «create»
+CostItem <.. TransportDecorator : «create»
+CostItem <.. DetailedTripReport : «use»
+CostItem <.. TripCalculatorViewModel : «use»
+CostItem <|.. CostLeaf
+CostItem <|.. CostGroup
+CostGroup o-- "*" CostItem : items
+note right of CostLeaf
+  amount() группы - сумма amount() вложенных элементов: отдельных статей и других групп. Клиенты работают с любым узлом дерева одинаково.
+end note
+@enduml

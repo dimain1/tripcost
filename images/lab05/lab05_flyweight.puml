@@ -1,0 +1,54 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 5. Паттерн «Приспособленец»: общие объекты городов
+
+class DirectionsViewModel <<Client>> {
+  + show(): void
+}
+class TripPlanningFacade <<Client>> {
+  - cities: CityFactory
+  --
+  + directionsFrom(origin, transport, passengers, roundTrip): List<RouteQuote>
+  + cityStats(): CityStats
+}
+class CityFactory <<FlyweightFactory>> {
+  - pool: Map<String, City>
+  - requests: int
+  {static} - DIRECTORY: Map<String, String[]>
+  --
+  + get(name: String): City
+  + createdCount(): int
+  + requestCount(): int
+}
+class City <<Flyweight>> {
+  - name: String
+  - region: String
+  - federalDistrict: String
+  --
+  ~ City(name: String, region: String, district: String)
+  + getName(): String
+  + getRegion(): String
+  + routeTo(other: City, km: double): String
+}
+class RouteQuote <<Context>> {
+  + from: City
+  + to: City
+  + transport: TransportType
+  + distanceKm: double
+  + total: BigDecimal
+  + perPassenger: BigDecimal
+  --
+  + describe(): String
+}
+
+TripPlanningFacade <-- DirectionsViewModel : facade
+CityFactory <-- TripPlanningFacade : cities
+RouteQuote <.. TripPlanningFacade : «create»
+City "2" <-- RouteQuote : from, to
+CityFactory o-- "*" City : pool
+note right of CityFactory
+  Внутреннее состояние (название, регион, округ) хранится в City и общее для всех маршрутов. Внешнее (транспорт, расстояние, стоимость) - в RouteQuote. 600 маршрутов между 25 городами используют 25 объектов City.
+end note
+@enduml

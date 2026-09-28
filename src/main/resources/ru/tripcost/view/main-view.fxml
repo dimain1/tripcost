@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.tripcost.view.MainView"
+            styleClass="root-pane">
+    <top>
+        <Label text="Расчёт стоимости поездки" styleClass="app-title">
+            <BorderPane.margin>
+                <Insets top="16" right="16" bottom="8" left="16"/>
+            </BorderPane.margin>
+        </Label>
+    </top>
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <Tab text="Расчёт">
+                <fx:include fx:id="calculator" source="trip-calculator-view.fxml"/>
+            </Tab>
+            <Tab text="Маршрут">
+                <fx:include fx:id="journey" source="journey-view.fxml"/>
+            </Tab>
+            <Tab text="Направления">
+                <fx:include fx:id="directions" source="directions-view.fxml"/>
+            </Tab>
+            <Tab text="Заявки">
+                <fx:include fx:id="requests" source="requests-view.fxml"/>
+            </Tab>
+            <Tab text="Тарифы">
+                <fx:include source="tariffs-view.fxml"/>
+            </Tab>
+        </TabPane>
+    </center>
+    <bottom>
+        <Label fx:id="statusLabel" styleClass="status-bar" maxWidth="Infinity"/>
+    </bottom>
+</BorderPane>

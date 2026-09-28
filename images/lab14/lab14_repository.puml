@@ -1,0 +1,73 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 14. Паттерн «Репозиторий»: шаблоны поездок пользователя
+
+interface Repository<T, ID> <<Repository>> {
+  + findAll(): List<T>
+  + findById(id: ID): Optional<T>
+  + existsById(id: ID): boolean
+  + save(entity: T): void
+  + deleteById(id: ID): boolean
+  + count(): long
+}
+interface TripTemplateRepository {
+  Repository<SavedTrip, String>
+}
+class InMemoryTripTemplateRepository <<реализация>> {
+  - items: Map<String, SavedTrip>
+}
+class FileTripTemplateRepository <<реализация>> {
+  - file: Path
+  - items: Map<String, SavedTrip>
+  - skipped: int
+  --
+  - load(): void
+  - flush(): void  {временный файл + замена}
+  + file(): Path
+}
+class SavedTripMapper <<преобразование>> {
+  {static} ~ write(props: Properties, index: int, saved: SavedTrip)
+  {static} ~ read(props: Properties, index: int): SavedTrip
+}
+class SavedTrip <<record>> {
+  + name: String
+  + trip: Trip
+  + savedAt: LocalDateTime
+  --
+  + toBuilder(): TripBuilder
+}
+class TripPlanningFacade <<Client>> {
+  - templates: TripTemplateRegistry
+  - savedTemplates: TripTemplateRepository
+  --
+  + saveTemplate(name, builder): void
+  + deleteTemplate(name): boolean
+  + isUserTemplate(name): boolean
+}
+class TripTemplateRegistry {
+  + register(name, prototype)
+  + remove(name): boolean
+}
+class TemplatesFile <<файл templates.properties>> {
+  count=2
+  trip.1.name=Мой отпуск
+  trip.1.from=Ставрополь
+  trip.1.transport=PLANE
+  ...
+}
+
+Repository <|-- TripTemplateRepository
+TripTemplateRepository <|.. InMemoryTripTemplateRepository
+TripTemplateRepository <|.. FileTripTemplateRepository
+SavedTripMapper <.. FileTripTemplateRepository : «use»
+TemplatesFile <.. SavedTripMapper : чтение / запись
+SavedTrip <.. Repository : T = SavedTrip
+TripTemplateRepository <-- TripPlanningFacade : savedTemplates
+TripTemplateRegistry <-- TripPlanningFacade : templates
+note right of InMemoryTripTemplateRepository
+  Фасад работает с шаблонами как с коллекцией: save(), deleteById(), findAll(). При запуске все сохранённые шаблоны загружаются в реестр прототипов. В программе используется файловый репозиторий, в тестах - репозиторий в памяти; фасад не меняется.
+end note
+@enduml

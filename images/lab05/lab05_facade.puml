@@ -1,0 +1,67 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 5. Паттерн «Фасад»: единая точка входа в модель
+
+class TripCalculatorViewModel <<Client>> {
+  - facade: TripPlanningFacade
+  --
+  + calculate(): void
+  + lookupDistance(): void
+  + buildReport(): String
+}
+class DirectionsViewModel <<Client>> {
+  - facade: TripPlanningFacade
+  --
+  + show(): void
+}
+class TripPlanningFacade <<Facade>> {
+  - templates: TripTemplateRegistry
+  - distances: DistanceService
+  - calculator: TripCostCalculator
+  - comparison: TransportComparison
+  - cities: CityFactory
+  --
+  + templateNames(): List<String>
+  + template(name: String): TripBuilder
+  + saveTemplate(name: String, builder: TripBuilder): void
+  + distance(from: String, to: String): RouteDistance
+  + calculate(trip: Trip): CostBreakdown
+  + compare(prototype: TripBuilder): List<ComparisonRow>
+  + quickQuote(from, to, transport, passengers, roundTrip): Quote
+  + directionsFrom(origin, transport, passengers, roundTrip): List<RouteQuote>
+  + report(type, format, trip, cost): String
+}
+class TripTemplateRegistry {
+  + create(name: String): TripBuilder
+  + register(...): void
+}
+interface DistanceService {
+  + distance(from, to): RouteDistance
+}
+class TripCostCalculator {
+  + calculate(trip: Trip): CostBreakdown
+}
+class TransportComparison {
+  + compare(prototype: TripBuilder): List
+}
+enum ReportType {
+  + create(format, trip, cost): TripReport
+}
+class CityFactory {
+  + get(name: String): City
+}
+
+TripPlanningFacade <-- TripCalculatorViewModel : facade
+TripPlanningFacade <-- DirectionsViewModel : facade
+TripTemplateRegistry <-- TripPlanningFacade
+DistanceService <-- TripPlanningFacade
+TripCostCalculator <-- TripPlanningFacade
+TransportComparison <-- TripPlanningFacade
+ReportType <.. TripPlanningFacade : report()
+CityFactory <-- TripPlanningFacade : cities
+note right of TripPlanningFacade
+  Подсистемы модели: шаблоны-прототипы, адаптер геобиблиотеки, калькулятор с фабриками и декораторами, сравнение, отчёты (мост), фабрика городов. Клиенты знают только фасад.
+end note
+@enduml

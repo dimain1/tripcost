@@ -1,0 +1,79 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 15. Паттерн «Future / Promise» с пулом потоков: расчёт направлений
+
+class AsyncJob<P, R> <<Future / Promise>> {
+  - parts: List<CompletableFuture<P>>
+  - result: CompletableFuture<R>
+  --
+  + AsyncJob(tasks, pool, combine, listener)
+  + result(): CompletableFuture<R>
+  + cancel(): void
+  + isDone(): boolean
+  + partCount(): int
+}
+class CompletableFuture<T> <<java.util.concurrent>> {
+  {static} + supplyAsync(task, executor)
+  {static} + allOf(futures...)
+  + thenApply(fn) / thenRun(action)
+  + handle(fn)
+  + join(): T
+  + cancel(flag): boolean
+}
+class QuotePool <<пул потоков>> {
+  - executor: ExecutorService
+  --
+  + executor(): Executor
+  + size(): int
+  + shutdown(): void
+}
+interface ExecutorService {
+  Executors.newFixedThreadPool(n)
+  потоки-демоны quote-1 ... quote-n
+}
+interface ProgressListener {
+  + progress(done: int, total: int)
+  {static} NONE
+}
+class TripPlanningFacade <<Client>> {
+  {static} - pool: QuotePool
+  --
+  + directionsFrom(...): List<RouteQuote>
+  + directionsFromAsync(origin, transport,
+        passengers, roundTrip, listener): AsyncJob
+  + poolSize(): int
+}
+class DirectionsViewModel <<ViewModel>> {
+  - job: AsyncJob
+  - uiExecutor: Executor
+  - busy: BooleanProperty
+  - progress: DoubleProperty
+  --
+  + show(): CompletableFuture<Void>
+  + cancel(): void
+  - finish(job, quotes, error)
+  + setUiExecutor(executor)
+  + cancelCommand(): ViewModelCommand
+}
+class DirectionsView <<View>> {
+  - progressBar: ProgressBar
+  - cancelButton: Button
+  --
+  setUiExecutor(Platform::runLater)
+}
+
+CompletableFuture <-- AsyncJob : parts, result
+QuotePool <.. AsyncJob : supplyAsync(task, executor)
+ExecutorService <-- QuotePool : executor
+ProgressListener <.. AsyncJob : «call» progress()
+AsyncJob <.. TripPlanningFacade : «create»
+QuotePool <-- TripPlanningFacade : pool
+TripPlanningFacade <.. DirectionsViewModel : directionsFromAsync()
+DirectionsViewModel <.. DirectionsView : привязка
+note right of ProgressListener
+  Метод directionsFromAsync() сразу возвращает обещание результата. Каждое направление считается отдельной задачей в пуле; allOf() собирает части, thenApply() сортирует таблицу. ViewModel передаёт слушатель (done, total) -> progress, подписывается через handle() и переносит результат в поток интерфейса.
+end note
+@enduml

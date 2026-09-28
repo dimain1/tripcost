@@ -1,0 +1,55 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 1. Паттерн «Одиночка»: настройки и тарифы AppConfig
+
+class AppConfig <<Singleton>> {
+  - currency: String
+  - fuelPrice: BigDecimal
+  - defaultFuelConsumption: double
+  - tariffs: Map<TransportType, Tariff>
+  --
+  - AppConfig()
+  {static} + getInstance(): AppConfig
+  + getCurrency(): String
+  + getFuelPrice(): BigDecimal
+  + getDefaultFuelConsumption(): double
+  + getTariff(type: TransportType): Tariff
+  + getTariffs(): Map<TransportType, Tariff>
+  {static} - load(): Properties
+}
+class Holder <<static nested>> {
+  {static} - INSTANCE: AppConfig
+}
+class Tariff <<record>> {
+  + baseFee: BigDecimal
+  + perKm: BigDecimal
+}
+class TripCostCalculator {
+  - config: AppConfig
+  --
+  + calculate(trip: Trip): CostBreakdown
+}
+class TripBuilder {
+  + reset(): TripBuilder
+  + build(): Trip
+}
+class TariffsViewModel {
+  + getRows(): ObservableList<TariffRow>
+}
+class MainViewModel {
+  + statusProperty(): ReadOnlyStringProperty
+}
+
+AppConfig +-- Holder
+AppConfig "1" <-- Holder : INSTANCE
+AppConfig o-- "*" Tariff : tariffs
+AppConfig <.. TripCostCalculator : getInstance()
+AppConfig <.. TripBuilder : getInstance()
+AppConfig <.. TariffsViewModel : getInstance()
+AppConfig <.. MainViewModel : getInstance()
+note right of AppConfig
+  Конструктор закрыт. Единственный экземпляр создаётся при первом вызове getInstance(): JVM загружает класс Holder лениво и потокобезопасно.
+end note
+@enduml

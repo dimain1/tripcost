@@ -1,0 +1,53 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 3. Паттерн «Адаптер»: сторонняя геобиблиотека как сервис расстояний
+
+class TripCalculatorViewModel <<Client>> {
+  - distanceService: DistanceService
+  --
+  + lookupDistance(): void
+}
+interface DistanceService <<Target>> {
+  + distance(from: String, to: String): RouteDistance
+  + knownCities(): List<String>
+}
+class RouteDistance <<record>> {
+  + straightKm: double
+  + roadKm: double
+  --
+  + forTransport(type: TransportType): double
+}
+class GeoApiDistanceAdapter <<Adapter>> {
+  - api: WorldGeoApi
+  {static} ~ KM_PER_MILE: double = 1.609344
+  {static} ~ ROAD_FACTOR: double = 1.3
+  {static} - RUSSIAN_NAMES: Map<String, String>
+  --
+  + GeoApiDistanceAdapter(api: WorldGeoApi)
+  + distance(from: String, to: String): RouteDistance
+  + knownCities(): List<String>
+  - locate(russianName: String): GeoPoint
+  {static} - normalize(name: String): String
+}
+class WorldGeoApi <<Adaptee>> {
+  + findCity(englishName: String): GeoPoint
+  + greatCircleMiles(a: GeoPoint, b: GeoPoint): double
+  + supportedCities(): Set<String>
+}
+class GeoPoint <<record>> {
+  + latitude: double
+  + longitude: double
+}
+
+DistanceService <-- TripCalculatorViewModel : distanceService
+DistanceService <|.. GeoApiDistanceAdapter
+WorldGeoApi "1" <-- GeoApiDistanceAdapter : api
+RouteDistance <.. GeoApiDistanceAdapter : «create»
+RouteDistance <.. DistanceService : «use»
+GeoPoint <.. WorldGeoApi : «use»
+note right of GeoApiDistanceAdapter
+  Адаптер переводит русское название в англоязычное, превращает null библиотеки в исключение, переводит мили в километры и оценивает путь по дорогам (× 1,3).
+end note
+@enduml

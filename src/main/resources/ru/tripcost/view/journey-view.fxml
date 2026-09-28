@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.tripcost.view.JourneyView"
+      spacing="10">
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+    <Label text="Маршрут из нескольких участков" styleClass="section-title"/>
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Откуда"/>
+        <ComboBox fx:id="fromBox" editable="true" prefWidth="190"/>
+        <Label text="Куда"/>
+        <ComboBox fx:id="toBox" editable="true" prefWidth="190"/>
+        <Label text="Транспорт"/>
+        <ComboBox fx:id="transportBox" prefWidth="170"/>
+        <Button fx:id="addButton" text="Добавить участок" defaultButton="true" styleClass="primary"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button fx:id="removeButton" text="Удалить"/>
+        <Button fx:id="upButton" text="Выше"/>
+        <Button fx:id="downButton" text="Ниже"/>
+        <Button fx:id="changeTransportButton" text="Сменить транспорт"/>
+        <Button fx:id="addReturnButton" text="Добавить обратный путь"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="undoButton" text="↶ Отменить"/>
+        <Button fx:id="redoButton" text="↷ Повторить"/>
+    </HBox>
+
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button fx:id="openInCalculatorButton" text="Открыть в расчёте"/>
+        <Separator orientation="VERTICAL"/>
+        <Label text="Вариант"/>
+        <TextField fx:id="versionNameField" prefWidth="150"/>
+        <Button fx:id="saveVersionButton" text="Сохранить вариант"/>
+        <ComboBox fx:id="versionBox" promptText="Сохранённые варианты" prefWidth="260"/>
+        <Button fx:id="restoreButton" text="Восстановить"/>
+    </HBox>
+
+    <Label fx:id="errorLabel" styleClass="error" wrapText="true" maxWidth="Infinity"/>
+
+    <HBox spacing="10" VBox.vgrow="ALWAYS">
+        <TableView fx:id="table" HBox.hgrow="ALWAYS">
+            <placeholder>
+                <Label text="Добавьте участки маршрута" styleClass="hint"/>
+            </placeholder>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+            </columnResizePolicy>
+            <columns>
+                <TableColumn fx:id="numberColumn" text="№" prefWidth="40" sortable="false"/>
+                <TableColumn fx:id="fromColumn" text="Откуда" prefWidth="130" sortable="false"/>
+                <TableColumn fx:id="toColumn" text="Куда" prefWidth="130" sortable="false"/>
+                <TableColumn fx:id="transportColumn" text="Транспорт" prefWidth="120" sortable="false"/>
+                <TableColumn fx:id="kmColumn" text="Км" prefWidth="60" styleClass="amount" sortable="false"/>
+                <TableColumn fx:id="costColumn" text="Стоимость" prefWidth="110" styleClass="amount" sortable="false"/>
+                <TableColumn fx:id="noteColumn" text="Примечание" prefWidth="150" sortable="false"/>
+            </columns>
+        </TableView>
+        <VBox spacing="6" prefWidth="300" minWidth="260">
+            <Label text="История команд" styleClass="section-title"/>
+            <ListView fx:id="historyList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Пассажиров"/>
+        <Spinner fx:id="passengersSpinner" editable="true" prefWidth="80"/>
+        <Separator orientation="VERTICAL"/>
+        <Label text="Итого:"/>
+        <Label fx:id="totalLabel" styleClass="total"/>
+        <Label text="на пассажира:"/>
+        <Label fx:id="perPassengerLabel"/>
+    </HBox>
+    <Label fx:id="summaryLabel" styleClass="hint" wrapText="true"/>
+</VBox>

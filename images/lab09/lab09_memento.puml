@@ -1,0 +1,60 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 9. Паттерн «Снимок»: сохранённые варианты маршрута
+
+class Journey <<Originator>> {
+  - legs: Leg[]
+  - size: int
+  --
+  + save(name: String): Memento
+  + restore(memento: Memento): void
+  + add(leg: Leg): void
+  + remove(index: int): Leg
+}
+class Journey.Memento <<Memento>> {
+  - name: String
+  - legs: Leg[]
+  - createdAt: LocalTime
+  --
+  - Memento(name: String, legs: Leg[])
+  + name(): String
+  + size(): int
+  + createdAt(): LocalTime
+}
+class JourneyVersions <<Caretaker>> {
+  - versions: List<Journey.Memento>
+  --
+  + save(journey: Journey, name: String): Memento
+  + find(name: String): Optional<Memento>
+  + list(): List<Memento>
+  + remove(memento: Memento): void
+}
+class RestoreVersionCommand <<Command>> {
+  - journey: Journey
+  - target: Journey.Memento
+  - backup: Journey.Memento
+  --
+  + execute(): void
+  + undo(): void
+}
+class JourneyViewModel <<Client>> {
+  - versions: JourneyVersions
+  --
+  + saveVersion(): void
+  + restoreVersion(): void
+}
+
+Journey.Memento <.. Journey : «create»
+Journey +-- Journey.Memento
+JourneyVersions o-- "*" Journey.Memento : versions
+Journey.Memento <-- RestoreVersionCommand : target, backup
+Journey <-- RestoreVersionCommand : journey
+JourneyVersions <-- JourneyViewModel : versions
+RestoreVersionCommand <.. JourneyViewModel : «create»
+note right of JourneyVersions
+  Содержимое снимка (участки) видит только Journey: поля Memento закрыты, а Journey имеет к ним доступ как внешний класс. Хранитель только хранит снимки. Восстановление выполняется командой, которая сначала делает снимок текущего состояния, поэтому его можно отменить.
+end note
+@enduml

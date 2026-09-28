@@ -1,0 +1,69 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 7. Паттерн «Итератор»: обход участков маршрута
+
+interface Iterable<Leg> {
+  + iterator(): Iterator<Leg>
+}
+class Journey <<Aggregate>> {
+  - legs: Leg[]
+  - size: int
+  - modCount: int
+  --
+  + iterator(): LegIterator
+  + returnIterator(): LegIterator
+  + iterator(transport: TransportType): LegIterator
+  + size(): int
+  + toList(): List<Leg>
+}
+interface Iterator<Leg> {
+  + hasNext(): boolean
+  + next(): Leg
+}
+interface LegIterator <<Iterator>> {
+  + number(): int
+}
+class Journey.ForwardIterator <<ConcreteIterator>> {
+  - cursor: int
+  - expectedModCount: int
+}
+class Journey.ReturnIterator <<ConcreteIterator>> {
+  - cursor: int
+  - expectedModCount: int
+}
+class TransportFilterIterator <<ConcreteIterator>> {
+  - source: LegIterator
+  - transport: TransportType
+  - nextLeg: Leg
+}
+class Leg <<record>> {
+  + from: String
+  + to: String
+  + transport: TransportType
+  --
+  + reversed(): Leg
+}
+class TripPlanningFacade <<Client>> {
+  + quoteJourney(journey, passengers): JourneyQuote
+}
+class AddReturnTripCommand <<Client>> {
+  + execute(): void
+}
+
+Iterable <|.. Journey
+Iterator <|-- LegIterator
+LegIterator <|.. Journey.ForwardIterator
+LegIterator <|.. Journey.ReturnIterator
+LegIterator <|.. TransportFilterIterator
+LegIterator <.. Journey : «create»
+Journey o-- "*" Leg : legs
+LegIterator <-- TransportFilterIterator : source
+LegIterator <.. TripPlanningFacade : «use»
+LegIterator <.. AddReturnTripCommand : «use»
+note right of Journey.ReturnIterator
+  Участки хранятся во внутреннем массиве, который наружу не выдаётся. Прямой итератор обходит участки в порядке поездки, обратный строит путь домой (с конца, каждый участок развёрнут), фильтр оставляет только участки на выбранном транспорте. Изменение маршрута во время обхода приводит к ConcurrentModificationException.
+end note
+@enduml

@@ -1,0 +1,87 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 3. Паттерн «Мост»: вид отчёта и формат файла
+
+class TripCalculatorViewModel <<Client>> {
+  - reportType: ObjectProperty<ReportType>
+  - reportFormat: ObjectProperty<ReportFormatType>
+  --
+  + buildReport(): String
+  + saveReport(file: File): void
+}
+enum ReportType {
+  SHORT
+  DETAILED
+  --
+  + create(format: ReportFormat, trip: Trip, cost: CostBreakdown): TripReport
+}
+enum ReportFormatType {
+  TEXT
+  HTML
+  MARKDOWN
+  --
+  + create(): ReportFormat
+}
+abstract class TripReport <<Abstraction>> {
+  # format: ReportFormat
+  # trip: Trip
+  # cost: CostBreakdown
+  --
+  + render(): String {final}
+  # title(): String {abstract}
+  # body(): String {abstract}
+}
+interface ReportFormat <<Implementor>> {
+  + displayName(): String
+  + extension(): String
+  + title(text: String): String
+  + section(heading: String, lines: List<ReportLine>): String
+  + note(text: String): String
+  + document(title: String, body: String): String
+}
+class ShortTripReport <<RefinedAbstraction>> {
+  # title(): String
+  # body(): String
+}
+class DetailedTripReport <<RefinedAbstraction>> {
+  # title(): String
+  # body(): String
+}
+class PlainTextFormat <<ConcreteImplementor>> {
+  + title(text: String): String
+  + section(...): String
+  + ...
+}
+class HtmlFormat <<ConcreteImplementor>> {
+  + title(text: String): String
+  + section(...): String
+  + ...
+}
+class MarkdownFormat <<ConcreteImplementor>> {
+  + title(text: String): String
+  + section(...): String
+  + ...
+}
+class ReportLine <<record>> {
+  + label: String
+  + value: String
+  + emphasized: boolean
+}
+
+ReportType <.. TripCalculatorViewModel : create()
+ReportFormatType <.. TripCalculatorViewModel : create()
+TripReport <.. ReportType : «create»
+ReportFormat <.. ReportFormatType : «create»
+TripReport o-- "1" ReportFormat : format (мост)
+TripReport <|-- ShortTripReport
+TripReport <|-- DetailedTripReport
+ReportFormat <|.. PlainTextFormat
+ReportFormat <|.. HtmlFormat
+ReportFormat <|.. MarkdownFormat
+ReportLine <.. ReportFormat : «use»
+note right of TripReport
+  Отчёт решает, ЧТО показать, формат - КАК оформить. 2 вида отчёта × 3 формата = 6 вариантов без отдельного класса на каждую комбинацию.
+end note
+@enduml

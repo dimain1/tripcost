@@ -1,0 +1,67 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 6. Паттерн «Заместитель»: кэширующий заместитель геосервиса
+
+class TripPlanningFacade <<Client>> {
+  - distances: CachingDistanceProxy
+  --
+  + distance(from: String, to: String): RouteDistance
+  + directionsFrom(origin, transport, passengers, roundTrip): List<RouteQuote>
+  + distanceStats(): Stats
+  + clearDistanceCache(): void
+}
+interface DistanceService <<Subject>> {
+  + distance(from: String, to: String): RouteDistance
+  + knownCities(): List<String>
+}
+class RouteDistance <<record>> {
+  + straightKm: double
+  + roadKm: double
+}
+class GeoApiDistanceAdapter <<RealSubject>> {
+  - api: WorldGeoApi
+  - latencyMs: long
+  --
+  + GeoApiDistanceAdapter(api: WorldGeoApi, latencyMs: long)
+  + distance(from: String, to: String): RouteDistance
+  + knownCities(): List<String>
+  - simulateNetwork(): void
+}
+class CachingDistanceProxy <<Proxy>> {
+  - realServiceFactory: Supplier<DistanceService>
+  - realService: DistanceService
+  - cache: Map<String, RouteDistance>
+  - requests: int
+  - cacheHits: int
+  - realCalls: int
+  --
+  + CachingDistanceProxy(factory: Supplier<DistanceService>)
+  + distance(from: String, to: String): RouteDistance
+  + knownCities(): List<String>
+  + clearCache(): void
+  + stats(): Stats
+  - real(): DistanceService
+  {static} - key(from: String, to: String): String
+}
+class CachingDistanceProxy.Stats <<record>> {
+  + requests: int
+  + cacheHits: int
+  + realCalls: int
+  + cachedRoutes: int
+  + realCreated: boolean
+}
+
+CachingDistanceProxy <-- TripPlanningFacade : distances
+DistanceService <.. TripPlanningFacade : «use»
+DistanceService <|.. GeoApiDistanceAdapter
+DistanceService <|.. CachingDistanceProxy
+GeoApiDistanceAdapter "0..1" <-- CachingDistanceProxy : realService
+CachingDistanceProxy o-- "*" RouteDistance : cache
+CachingDistanceProxy.Stats <.. CachingDistanceProxy : «create»
+note right of CachingDistanceProxy
+  distance(): ключ пары городов не зависит от направления. Если пара есть в кэше, ответ возвращается сразу. Иначе real() при первом обращении создаёт реальный сервис, запрос уходит в геосервис, ответ кладётся в кэш. Ошибки не кэшируются.
+end note
+@enduml

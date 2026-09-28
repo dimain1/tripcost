@@ -1,0 +1,94 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 13. Паттерн «Сага»: бронирование командировки
+
+class BookingSaga <<Orchestrator>> {
+  - steps: List<SagaStep>
+  --
+  + run(order: BookingOrder): SagaResult
+  - compensate(order, done: Deque, log): void
+  {static} + standard(services: TravelServices): BookingSaga
+}
+interface SagaStep <<SagaStep>> {
+  + name(): String
+  + appliesTo(order): boolean
+  + execute(order): String
+  + compensate(order, reference): void
+}
+class TripRequest <<Client>> {
+  - booking: BookingSaga
+  - lastBooking: SagaResult
+  --
+  ~ runBooking(): SagaResult
+}
+class RequestStates.Approved <<State>> {
+  + pay(request): void
+}
+class BookingOrder <<record>> {
+  + requestId: int
+  + route: String
+  + passengers, nights: int
+  + ticketsCost, hotelCost, insuranceCost, total: BigDecimal
+}
+class SagaResult <<record>> {
+  + success: boolean
+  + log: List<SagaLogEntry>
+  + references: Map<String, String>
+  + failure: String
+}
+class SagaLogEntry <<record>> {
+  + kind: DONE | SKIPPED | FAILED | COMPENSATED
+  + step: String
+  + message: String
+}
+class BookingSteps <<шаги>> {
+  buyTickets(tickets): SagaStep
+  bookHotel(hotels): SagaStep
+  issueInsurance(insurance): SagaStep
+  chargeBudget(budget): SagaStep
+}
+abstract class RemoteService {
+  - active: Map<String, String>
+  - failing: boolean
+  --
+  + setFailing(failing: boolean): void
+  # register(description, failureReason): String
+}
+class TicketService <<сервис>> {
+  + buy(order): String
+  + refund(id): void
+}
+class HotelService <<сервис>> {
+  + book(order): String
+  + cancel(id): void
+}
+class InsuranceService <<сервис>> {
+  + issue(order): String
+  + annul(id): void
+}
+class BudgetService <<сервис>> {
+  - balance: BigDecimal
+  --
+  + charge(order): String
+  + refund(id): void
+}
+
+BookingSaga o-- "1..*" SagaStep : steps
+BookingSaga <-- TripRequest : booking
+TripRequest <.. RequestStates.Approved : runBooking()
+BookingOrder <.. BookingSaga : «use»
+SagaResult <.. BookingSaga : «create»
+SagaResult o-- "*" SagaLogEntry : log
+SagaStep <.. BookingSteps : «create»
+BudgetService <.. BookingSteps : вызывают сервисы
+RemoteService <|-- TicketService
+RemoteService <|-- HotelService
+RemoteService <|-- InsuranceService
+RemoteService <|-- BudgetService
+note right of RemoteService
+  Каждый сервис - отдельный участник со своим состоянием (брони, остаток бюджета) и без общей транзакции с другими. Сбой имитируется флагом failing или нехваткой денег в бюджете.
+end note
+@enduml

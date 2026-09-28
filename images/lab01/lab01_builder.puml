@@ -1,0 +1,99 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 1. Паттерн «Строитель»: пошаговая сборка поездки Trip
+
+class TripCalculatorViewModel <<Client>> {
+  - calculator: TripCostCalculator
+  --
+  + calculate(): void
+  + applyPreset(): void
+  - buildTripFromForm(): Trip
+}
+class TripDirector <<Director>> {
+  - builder: TripBuilder
+  --
+  + TripDirector(builder: TripBuilder)
+  + construct(preset: TripPreset): Trip
+  - weekendByCar(): void
+  - businessByTrain(): void
+  - vacationByPlane(): void
+  - cityTaxi(): void
+}
+class TripBuilder <<Builder>> {
+  - origin: String
+  - destination: String
+  - distanceKm: double
+  - transport: TransportType
+  - passengers: int
+  - fuelConsumption: double
+  - roundTrip: boolean
+  - tollCost: BigDecimal
+  - nights: int
+  - pricePerNight: BigDecimal
+  --
+  + reset(): TripBuilder
+  + from(origin: String): TripBuilder
+  + to(destination: String): TripBuilder
+  + distance(km: double): TripBuilder
+  + by(transport: TransportType): TripBuilder
+  + passengers(count: int): TripBuilder
+  + fuelConsumption(l: double): TripBuilder
+  + roundTrip(value: boolean): TripBuilder
+  + tolls(cost: BigDecimal): TripBuilder
+  + accommodation(nights: int, price: BigDecimal): TripBuilder
+  + build(): Trip
+}
+class Trip <<Product>> {
+  - origin: String
+  - destination: String
+  - distanceKm: double
+  - transport: TransportType
+  - passengers: int
+  - fuelConsumption: double
+  - roundTrip: boolean
+  - tollCost: BigDecimal
+  - nights: int
+  - pricePerNight: BigDecimal
+  --
+  ~ Trip(builder: TripBuilder)
+  {static} + builder(): TripBuilder
+  + getLegs(): int
+  + getTotalDistanceKm(): double
+  + get...(): ...
+}
+enum TripPreset {
+  WEEKEND_BY_CAR
+  BUSINESS_BY_TRAIN
+  VACATION_BY_PLANE
+  CITY_TAXI
+}
+class TripValidationException {
+  - errors: List<String>
+  --
+  + getErrors(): List<String>
+}
+enum TransportType {
+  CAR
+  TAXI
+  BUS
+  TRAIN
+  PLANE
+  --
+  + getMaxPassengers(): int
+  + usesFuel(): boolean
+  + allowsTolls(): boolean
+}
+
+TripDirector <.. TripCalculatorViewModel : «use»
+TripBuilder <.. TripCalculatorViewModel : «use»
+TripDirector o-- TripBuilder : builder
+TripPreset <.. TripDirector : «use»
+Trip <.. TripBuilder : «create»
+TripValidationException <.. TripBuilder : «throw»
+TransportType "1" <-- Trip : transport
+note right of TripBuilder
+  Каждый шаг возвращает сам строитель (fluent interface). build() проверяет все данные и только потом вызывает конструктор Trip.
+end note
+@enduml

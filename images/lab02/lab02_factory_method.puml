@@ -1,0 +1,83 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+title ЛР 2. Паттерн «Фабричный метод»: создание транспорта
+
+class TransportFactories {
+  {static} + forType(type: TransportType): TransportFactory
+}
+class TripCostCalculator <<Client>> {
+  + calculate(trip: Trip): CostBreakdown
+}
+class TariffsViewModel <<Client>> {
+  + getRows(): ObservableList<TariffRow>
+}
+abstract class TransportFactory <<Creator>> {
+  + createTransport(): Transport {abstract}
+  + transportCost(trip: Trip): BigDecimal
+}
+interface Transport <<Product>> {
+  + getType(): TransportType
+  + cost(trip: Trip): BigDecimal
+  + describeBaseFee(): String
+  + describePerKm(): String
+}
+class CarFactory <<ConcreteCreator>> {
+  + createTransport(): Transport
+}
+class PrivateCar <<ConcreteProduct>> {
+  + cost(trip: Trip): BigDecimal
+}
+class TaxiFactory <<ConcreteCreator>> {
+  + createTransport(): Transport
+}
+class Taxi <<ConcreteProduct>> {
+  + cost(trip: Trip): BigDecimal
+}
+class BusFactory <<ConcreteCreator>> {
+  + createTransport(): Transport
+}
+class Bus <<ConcreteProduct>> {
+  + Bus()
+}
+class TrainFactory <<ConcreteCreator>> {
+  + createTransport(): Transport
+}
+class Train <<ConcreteProduct>> {
+  + Train()
+}
+class PlaneFactory <<ConcreteCreator>> {
+  + createTransport(): Transport
+}
+class Plane <<ConcreteProduct>> {
+  + Plane()
+}
+abstract class TicketTransport {
+  - tariff: Tariff
+  --
+  # TicketTransport(type: TransportType)
+  + cost(trip: Trip): BigDecimal
+}
+
+TransportFactories <.. TripCostCalculator : forType()
+TransportFactories <.. TariffsViewModel : forType()
+TransportFactories o-- TransportFactory : 5
+Transport <.. TransportFactory : «use»
+TransportFactory <|-- CarFactory
+PrivateCar <.. CarFactory : «create»
+TransportFactory <|-- TaxiFactory
+Taxi <.. TaxiFactory : «create»
+TransportFactory <|-- BusFactory
+Bus <.. BusFactory : «create»
+TransportFactory <|-- TrainFactory
+Train <.. TrainFactory : «create»
+TransportFactory <|-- PlaneFactory
+Plane <.. PlaneFactory : «create»
+Transport <|.. PrivateCar
+Transport <|.. Taxi
+Transport <|.. TicketTransport
+TicketTransport <|-- Bus
+TicketTransport <|-- Train
+TicketTransport <|-- Plane
+@enduml

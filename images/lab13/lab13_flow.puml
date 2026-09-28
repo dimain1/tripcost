@@ -1,0 +1,61 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 13. Ход саги: шаги и компенсации
+
+class T1 <<шаг 1>> {
+  Покупка билетов
+  --
+  TicketService.buy()
+}
+class T2 <<шаг 2>> {
+  Бронирование гостиницы
+  --
+  HotelService.book()
+}
+class T3 <<шаг 3>> {
+  Оформление страховки
+  --
+  InsuranceService.issue()
+}
+class T4 <<шаг 4>> {
+  Списание с бюджета
+  --
+  BudgetService.charge()
+}
+class OK <<успех>> {
+  Заявка «Оплачена»
+}
+class C1 <<компенсация 1>> {
+  Возврат билетов
+  --
+  TicketService.refund()
+}
+class C2 <<компенсация 2>> {
+  Отмена брони
+  --
+  HotelService.cancel()
+}
+class C3 <<компенсация 3>> {
+  Аннулирование полиса
+  --
+  InsuranceService.annul()
+}
+class FAIL <<неудача>> {
+  Заявка остаётся «Согласована»
+}
+
+T2 <-- T1 : успех
+T3 <-- T2 : успех
+T4 <-- T3 : успех
+OK <-- T4 : успех
+C3 <.. T4 : сбой шага 4
+C2 <-- C3 : затем
+C1 <-- C2 : затем
+FAIL <-- C1
+note right of C2
+  Шаги выполняются слева направо. На схеме показан сбой шага 4 (не хватило бюджета): выполняются компенсации C3, C2, C1 справа налево. При сбое шага k компенсируются только уже выполненные шаги k-1 ... 1. Пропущенные шаги (нет ночёвок, нет страховки) не выполняются и не компенсируются.
+end note
+@enduml

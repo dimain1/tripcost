@@ -1,0 +1,82 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 7. Паттерн «Команда»: отмена и повтор изменений маршрута
+
+class JourneyViewModel <<Client>> {
+  - journey: Journey
+  - history: CommandHistory
+  --
+  + addLeg(): void
+  + removeSelected(): void
+  + moveUp() / moveDown(): void
+  + changeTransport(): void
+  + addReturnTrip(): void
+  + undo(): void
+  + redo(): void
+}
+class CommandHistory <<Invoker>> {
+  - undoStack: Deque<Command>
+  - redoStack: Deque<Command>
+  --
+  + execute(command: Command): void
+  + undo(): void
+  + redo(): void
+  + canUndo(): boolean
+  + canRedo(): boolean
+  + executed(): List<String>
+}
+interface Command <<Command>> {
+  + execute(): void
+  + undo(): void
+  + description(): String
+}
+class AddLegCommand <<ConcreteCommand>> {
+  - leg: Leg
+  - index: int
+}
+class RemoveLegCommand <<ConcreteCommand>> {
+  - index: int
+  - removed: Leg
+}
+class MoveLegCommand <<ConcreteCommand>> {
+  - index: int
+  - target: int
+}
+class ChangeTransportCommand <<ConcreteCommand>> {
+  - index: int
+  - transport: TransportType
+  - previous: Leg
+}
+class AddReturnTripCommand <<ConcreteCommand>> {
+  - added: int
+}
+class Journey <<Receiver>> {
+  + add(leg: Leg): void
+  + insert(index: int, leg: Leg): void
+  + remove(index: int): Leg
+  + set(index: int, leg: Leg): Leg
+  + swap(i: int, j: int): void
+  + returnIterator(): LegIterator
+}
+
+CommandHistory <-- JourneyViewModel : history
+CommandHistory o-- "*" Command : undo / redo
+AddLegCommand <.. JourneyViewModel : «create»
+Journey <-- JourneyViewModel : journey
+Command <|.. AddLegCommand
+Command <|.. RemoveLegCommand
+Command <|.. MoveLegCommand
+Command <|.. ChangeTransportCommand
+Command <|.. AddReturnTripCommand
+Journey <-- AddLegCommand
+Journey <-- RemoveLegCommand
+Journey <-- MoveLegCommand
+Journey <-- ChangeTransportCommand
+Journey <-- AddReturnTripCommand
+note right of Command
+  Каждое действие над маршрутом - объект-команда: execute() изменяет маршрут, undo() возвращает его в прежнее состояние. CommandHistory хранит выполненные команды для отмены и отменённые - для повтора.
+end note
+@enduml

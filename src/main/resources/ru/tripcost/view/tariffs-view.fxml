@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.tripcost.view.TariffsView"
+      spacing="10">
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+    <Label text="Тарифы и цены из файла app.properties" styleClass="section-title"/>
+    <Label text="Описание тарифа формирует объект транспорта, созданный своей фабрикой. Цены он берёт из единственного экземпляра AppConfig."
+           styleClass="hint" wrapText="true"/>
+
+    <TableView fx:id="table" VBox.vgrow="ALWAYS">
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+        </columnResizePolicy>
+        <columns>
+            <TableColumn fx:id="transportColumn" text="Транспорт" prefWidth="180"/>
+            <TableColumn fx:id="baseFeeColumn" text="Фиксированная часть за поездку" prefWidth="240"/>
+            <TableColumn fx:id="perKmColumn" text="Цена за километр" prefWidth="360"/>
+        </columns>
+    </TableView>
+</VBox>

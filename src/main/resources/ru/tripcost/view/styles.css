@@ -1,0 +1,71 @@
+.root-pane {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: #f7f7f9;
+}
+
+.app-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.hint {
+    -fx-text-fill: #5f6368;
+}
+
+.error {
+    -fx-text-fill: #b3261e;
+    -fx-background-color: #fdecea;
+    -fx-padding: 8 10 8 10;
+    -fx-background-radius: 4;
+}
+
+.result-card {
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-border-color: #dadce0;
+    -fx-border-radius: 6;
+}
+
+.total {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+.button.primary {
+    -fx-background-color: #1a73e8;
+    -fx-text-fill: white;
+}
+
+.status-bar {
+    -fx-padding: 6 16 6 16;
+    -fx-text-fill: #5f6368;
+    -fx-background-color: #eceef1;
+    -fx-font-size: 12px;
+}
+
+.info {
+    -fx-text-fill: #1e6b34;
+    -fx-background-color: #e6f4ea;
+    -fx-padding: 8 10 8 10;
+    -fx-background-radius: 4;
+}
+
+.amount {
+    -fx-alignment: CENTER-RIGHT;
+}
+
+/* Результат цепочки согласования */
+.approval {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e6b34;
+}
+
+.approval:rejected {
+    -fx-text-fill: #b3261e;
+}

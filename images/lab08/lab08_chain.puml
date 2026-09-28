@@ -1,0 +1,73 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+set separator none
+title ЛР 8. Паттерн «Цепочка обязанностей»: согласование командировки
+
+class TripPlanningFacade <<Client>> {
+  - approval: ApprovalHandler
+  --
+  + approve(trip: Trip, cost: CostBreakdown): ApprovalDecision
+  + approvalChain(): List<String>
+}
+abstract class ApprovalHandler <<Handler>> {
+  - next: ApprovalHandler
+  --
+  + linkWith(next: ApprovalHandler): ApprovalHandler
+  + handle(request: ApprovalRequest): ApprovalDecision
+  # handle(request, trace: List<String>): ApprovalDecision
+  # passToNext(request, trace, why: String): ApprovalDecision
+  # approve(trace, reason: String): ApprovalDecision
+  # reject(trace, reason: String): ApprovalDecision
+  + name(): String
+  + chainNames(): List<String>
+}
+class TravelPolicyHandler <<ConcreteHandler>> {
+  - taxiMaxKm: double
+  - planeMinKm: double
+  - hotelMaxPerNight: BigDecimal
+  --
+  # handle(request, trace): ApprovalDecision
+  - violations(trip: Trip): List<String>
+}
+class LimitApprovalHandler <<ConcreteHandler>> {
+  - role: String
+  - limit: BigDecimal
+  --
+  # handle(request, trace): ApprovalDecision
+}
+class FinanceCommitteeHandler <<ConcreteHandler>> {
+  # handle(request, trace): ApprovalDecision
+}
+class ApprovalChain <<utility>> {
+  {static} + standard(): ApprovalHandler
+}
+class ApprovalRequest <<record>> {
+  + trip: Trip
+  + cost: CostBreakdown
+  --
+  + total(): BigDecimal
+}
+class ApprovalDecision <<record>> {
+  + approved: boolean
+  + handler: String
+  + reason: String
+  + trace: List<String>
+  --
+  + summary(): String
+}
+
+ApprovalHandler <-- TripPlanningFacade : approval
+ApprovalHandler "0..1" <-- ApprovalHandler : next
+ApprovalHandler <|-- TravelPolicyHandler
+ApprovalHandler <|-- LimitApprovalHandler
+ApprovalHandler <|-- FinanceCommitteeHandler
+ApprovalHandler <.. ApprovalChain : «create»
+ApprovalChain <.. TripPlanningFacade : «use»
+ApprovalRequest <.. ApprovalHandler : «use»
+ApprovalDecision <.. ApprovalHandler : «create»
+note right of LimitApprovalHandler
+  Стандартная цепочка: Политика поездок → Автосогласование (до 15 000 ₽) → Руководитель отдела (до 60 000 ₽) → Директор (до 250 000 ₽) → Финансовый комитет. Звено либо принимает решение, либо передаёт запрос следующему; нарушение политики останавливает запрос сразу.
+end note
+@enduml
